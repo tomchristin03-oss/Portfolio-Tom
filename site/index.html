@@ -590,6 +590,7 @@ img.fm-nf,video.fm-nf{position:absolute;inset:0;width:100%;height:100%;object-fi
 .ibr-d b,.ibr-y b{border-radius:4px}
 .ibr-d{color:#0A0A0A;text-shadow:0 0 6px #fff,0 0 2px #fff,0 0 1px #fff;text-overflow:ellipsis}
 .ib.moved .ib-cue{opacity:0}
+html,body{overscroll-behavior-y:none}
 
 /* mobile : bandes animées par transformations (fluide sur iPhone) */
 .ib.ib-gpu .ibr{position:absolute;left:0;right:0;top:0;height:var(--BH,50vh);flex:none;will-change:transform,clip-path;contain:layout paint style;transform:translate3d(0,0,0)}
@@ -1495,11 +1496,23 @@ function ibHTML(){
   });
   return h + '<span class="ib-cue"><b>Défiler ↓</b></span></div></section>';
 }
+var SVH = 0;
+function stableVH(){
+  if (!SVH) {
+    var d = document.createElement('div');
+    d.style.cssText = 'position:fixed;left:0;top:0;width:1px;height:100vh;height:100lvh;visibility:hidden;pointer-events:none';
+    document.body.appendChild(d); SVH = d.offsetHeight || window.innerHeight; d.remove();
+  }
+  return SVH;
+}
+window.addEventListener('orientationchange', function(){ SVH = 0; });
+window.addEventListener('resize', function(){ if (Math.abs(window.innerWidth - (stableVH.w || 0)) > 1) { stableVH.w = window.innerWidth; SVH = 0; } });
 function updateIB(){
   var sec = document.getElementById('travaux');
   if (!sec || !sec.classList.contains('ib')) return;
   var bands = sec.querySelectorAll('.ibr'), n = bands.length; if (!n) return;
-  var vh = window.innerHeight, r = sec.getBoundingClientRect(), total = Math.max(1, r.height - vh);
+  /* hauteur d'écran stable : la barre d'adresse de Safari qui se cache ou réapparaît ne fait plus sauter les bandes */
+  var vh = stableVH(), r = sec.getBoundingClientRect(), total = Math.max(1, r.height - vh);
   var pin = sec.querySelector('.ib-pin');
   /* mesures fixes (recalculées seulement si l'écran change) : pendant le défilement on ne touche plus
      à la mise en page, seulement à des transformations et des découpes, gérées par la carte graphique */
