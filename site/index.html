@@ -590,6 +590,12 @@ img.fm-nf,video.fm-nf{position:absolute;inset:0;width:100%;height:100%;object-fi
 .ibr-d b,.ibr-y b{border-radius:4px}
 .ibr-d{color:#0A0A0A;text-shadow:0 0 6px #fff,0 0 2px #fff,0 0 1px #fff;text-overflow:ellipsis}
 .ib.moved .ib-cue{opacity:0}
+
+/* mobile : bandes animées par transformations (fluide sur iPhone) */
+.ib.ib-gpu .ibr{position:absolute;left:0;right:0;top:0;height:var(--BH,50vh);flex:none;will-change:transform,clip-path;contain:layout paint style;transform:translate3d(0,0,0)}
+.ib.ib-gpu .ibr-m{clip-path:none}
+.ib.ib-gpu .ibr-m img,.ib.ib-gpu .ibr-m video{top:0;height:100%;transform:none}
+.ib.ib-gpu .ibr-row{height:var(--R0,60px);will-change:transform}
 @media (max-width:760px){
   .ibr-t{grid-column:1/-1}.ibr-d,.ibr-y{display:none}
 }
@@ -1494,35 +1500,50 @@ function updateIB(){
   if (!sec || !sec.classList.contains('ib')) return;
   var bands = sec.querySelectorAll('.ibr'), n = bands.length; if (!n) return;
   var vh = window.innerHeight, r = sec.getBoundingClientRect(), total = Math.max(1, r.height - vh);
-  var pin = sec.querySelector('.ib-pin'), ph = pin.clientHeight, top0 = parseFloat(getComputedStyle(pin).paddingTop) || 0, area = ph - top0;
+  var pin = sec.querySelector('.ib-pin');
+  /* mesures fixes (recalculées seulement si l'écran change) : pendant le défilement on ne touche plus
+     à la mise en page, seulement à des transformations et des découpes, gérées par la carte graphique */
+  var K = sec._ibK, key = pin.clientHeight + 'x' + pin.clientWidth + 'x' + n;
+  if (!K || K.key !== key) {
+    var ph = pin.clientHeight, top0 = parseFloat(getComputedStyle(pin).paddingTop) || 0, area = ph - top0;
+    var share = 0.55, G = n > 1 ? (share * n - 1) / (1 - share) : 0;
+    var nA = Math.max(n, visibleProjects().length, 2), GA = (share * nA - 1) / (1 - share), RA = area / (nA + GA * 1.4);
+    var tf = Math.max(13, Math.min(RA * 0.74, FINE ? 76 : window.innerWidth * 0.085));
+    var grads = [], sg = 0;
+    for (var i = 0; i < n; i++) { grads[i] = i === 0 ? 1 + G : 1 + G * 0.35 * Math.pow(n > 1 ? 1 - (i - 1) / (n - 1) : 1, 2); sg += grads[i]; }
+    var hOpen = n > 1 ? area * (1 + G) / (n + G) : area, hFirst = area * grads[0] / sg;
+    var BH = Math.ceil(Math.max(hOpen, hFirst, n > 1 ? area / n : area)) + 2, rowH = n > 1 ? area / (n + G) : area;
+    K = sec._ibK = {key:key, top0:top0, area:area, G:G, grads:grads, BH:BH};
+    pin.style.setProperty('--tf', tf.toFixed(1) + 'px');
+    pin.style.setProperty('--BH', BH + 'px');
+    pin.style.setProperty('--R0', Math.max(tf * 1.3, rowH).toFixed(1) + 'px');
+    sec.classList.add('ib-gpu');
+  }
   var scrolled = clamp(-r.top, 0, total), introLen = Math.min(total * 0.15, vh * 0.3);
   var q = clamp(scrolled / introLen, 0, 1);
   var prog = clamp((scrolled - introLen) / Math.max(1, total - introLen), 0, 1), t = prog * (n - 1);
   sec.classList.toggle('moved', scrolled > 4);
-  /* la bande ouverte prend ~55 % ; les autres gardent la hauteur d'une ligne d'index */
-  var share = 0.55, G = n > 1 ? (share * n - 1) / (1 - share) : 0, R0 = area / (n + G * 1.4), S = 0, gs = [];
-  for (var i = 0; i < n; i++) { gs[i] = Math.max(0, 1 - Math.abs(i - t) / 1.25); S += gs[i]; }
-  /* taille des titres calée sur la liste complète : identique quelle que soit la catégorie choisie */
-  var nA = Math.max(n, visibleProjects().length, 2), GA = (share * nA - 1) / (1 - share), RA = area / (nA + GA * 1.4);
-  var R = n > 1 ? area / (n + G * S) : RA, HM = n > 1 ? Math.max(40, R0 * (1 + G)) : area;
-  var tf = Math.max(13, Math.min(RA * 0.74, FINE ? 76 : window.innerWidth * 0.085));
-  pin.style.setProperty('--R', R.toFixed(2) + 'px');
-  pin.style.setProperty('--HM', HM.toFixed(1) + 'px');
-  pin.style.setProperty('--tf', tf.toFixed(1) + 'px');
-  pin.style.setProperty('--q', q.toFixed(4));
-  /* INTRO : un index typographique serré sur fond blanc ; au défilement les lignes s'écartent
-     et les images s'ouvrent derrière chaque titre depuis sa ligne médiane. Linéaire, sans déformation. */
-  /* les images sont là dès l'arrivée : bandes plus épaisses en haut, plus fines en bas, qui s'homogénéisent au premier défilement */
+  /* les images sont là dès l'arrivée : bandes plus épaisses en haut, plus fines en bas, qui s'homogénéisent au premier défilement ;
+     ensuite la bande du projet en cours s'ouvre (~55 %) et les autres se resserrent. Linéaire, sans déformation. */
+  var ws = [], W = 0, os = [];
   for (var i = 0; i < n; i++) {
-    var g = gs[i], b = bands[i], acc = 1 + G * g;
-    var grad = i === 0 ? 1 + G : 1 + G * 0.35 * Math.pow(n > 1 ? 1 - (i - 1) / (n - 1) : 1, 2);
-    b.style.flex = ''; b.style.flexGrow = (grad + (acc - grad) * q).toFixed(4);
-    var o = q < 1 ? (i === 0 ? 1 : 0) * (1 - q) + g * q : g;
-    b.style.setProperty('--q', '1');
-    b.style.setProperty('--o', o.toFixed(3));
-    b.classList.toggle('open', o > 0.5);
-    var v = b.querySelector('.ibr-m video.on');
-    if (v) { if (o > 0.04 && v.paused) { var pr = v.play(); if (pr && pr.catch) pr.catch(function(){}); } else if (o <= 0.04 && !v.paused) v.pause(); }
+    var g = Math.max(0, 1 - Math.abs(i - t) / 1.25), acc = 1 + K.G * g, gr = K.grads[i];
+    ws[i] = gr + (acc - gr) * q; W += ws[i];
+    os[i] = q < 1 ? (i === 0 ? 1 : 0) * (1 - q) + g * q : g;
+  }
+  var y = K.top0;
+  for (var i = 0; i < n; i++) {
+    var b = bands[i], h = K.area * ws[i] / W, c = Math.max(0, (K.BH - h) / 2);
+    b.style.transform = 'translate3d(0,' + (y + h / 2 - K.BH / 2).toFixed(2) + 'px,0)';
+    b.style.clipPath = b.style.webkitClipPath = 'inset(' + c.toFixed(2) + 'px 0 ' + c.toFixed(2) + 'px 0)';
+    var row = b._row || (b._row = b.querySelector('.ibr-row'));
+    if (row) row.style.transform = 'translate3d(0,' + c.toFixed(2) + 'px,0)';
+    y += h;
+    var open = os[i] > 0.5;
+    if (b._open !== open) { b._open = open; b.classList.toggle('open', open); }
+    /* une seule vidéo lue à la fois : celle de la bande ouverte */
+    var v = b._v === undefined ? (b._v = b.querySelector('.ibr-m video.on')) : b._v;
+    if (v) { if (open && v.paused) { var pr = v.play(); if (pr && pr.catch) pr.catch(function(){}); } else if (!open && !v.paused) v.pause(); }
   }
 }
 
