@@ -159,8 +159,9 @@ def main(live_path, raw_dir):
     inj = '<script type="application/json" id="pf-urls">' + json.dumps(pu) + '</script>\n'
     k = body.index('<script id="pf-app"'); body = body[:k] + inj + body[k:]
     # les miniatures de l'accueil partent en premier
-    pre = ''.join('<link rel="preload" as="image" href="media/%s" fetchpriority="high">' % man[i]['t']
-                  for i in cover_ids(st)[:4] if i in man and 't' in man[i])
+    # les images de l'accueil (miniatures, images d'attente des vidéos) partent en premier
+    pre = ''.join('<link rel="preload" as="image" href="media/%s" fetchpriority="high">' % (man[i].get('t') or man[i]['p'])
+                  for i in cover_ids(st) if i in man and (man[i].get('t') or man[i].get('p')))
     head = ('<!doctype html>\n<html lang="fr"><head><meta charset="utf-8">'
       '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">'
       '<title>Tom Christin-Leymarie — Direction artistique & design graphique</title>'

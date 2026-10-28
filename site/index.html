@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Tom Christin-Leymarie — Direction artistique & design graphique</title><meta name="description" content="Portfolio de Tom Christin-Leymarie, directeur artistique et graphiste basé à Paris : identité visuelle, édition, typographie, textile, IA."><meta property="og:title" content="Tom Christin-Leymarie — Portfolio"><meta property="og:type" content="website"><link rel="preload" as="image" href="media/95d6f8c8520e21b99f3c3bbb967718d4-t1.webp" fetchpriority="high"><link rel="preload" as="image" href="media/ab94c3ad91c953518147a6d570031ca7-t1.webp" fetchpriority="high"><style>body{margin:0}</style></head><body>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Tom Christin-Leymarie — Direction artistique & design graphique</title><meta name="description" content="Portfolio de Tom Christin-Leymarie, directeur artistique et graphiste basé à Paris : identité visuelle, édition, typographie, textile, IA."><meta property="og:title" content="Tom Christin-Leymarie — Portfolio"><meta property="og:type" content="website"><link rel="preload" as="image" href="media/8fff063cef7178ee69bb9bdf1a10342f-p1.webp" fetchpriority="high"><link rel="preload" as="image" href="media/95d6f8c8520e21b99f3c3bbb967718d4-t1.webp" fetchpriority="high"><link rel="preload" as="image" href="media/ab94c3ad91c953518147a6d570031ca7-t1.webp" fetchpriority="high"><link rel="preload" as="image" href="media/0bd364519b35dcf60d33d6c68a133b2d-p1.webp" fetchpriority="high"><link rel="preload" as="image" href="media/c95e9f90a27525f8a53d79a49152130b-t1.webp" fetchpriority="high"><link rel="preload" as="image" href="media/955a5d2cae3891fa88cd4065369e9894-p1.webp" fetchpriority="high"><link rel="preload" as="image" href="media/4b715b81d587cd1120f0eb08e8fa46b8-p1.webp" fetchpriority="high"><link rel="preload" as="image" href="media/97c82aea505574d72cdb6c1341fff5b6-p1.webp" fetchpriority="high"><link rel="preload" as="image" href="media/97c82aea505574d72cdb6c1341fff5b6-p1.webp" fetchpriority="high"><link rel="preload" as="image" href="media/b8295122cc050d008af9b87da5b7c93b-p1.webp" fetchpriority="high"><link rel="preload" as="image" href="media/b47243b27f58f351b73e2578c2ae61ef-t1.webp" fetchpriority="high"><link rel="preload" as="image" href="media/61981abbeefdcbf0e2fc26d8e3e59a96-p1.webp" fetchpriority="high"><style>body{margin:0}</style></head><body>
 
 
 <link id="pf-fonts" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,400;1,400&amp;display=swap">
@@ -973,7 +973,11 @@ function placeholders(scope){
   Array.prototype.forEach.call((scope || app).querySelectorAll('img,video'), function(el){
     if (el._ph) return; el._ph = 1;
     var id = idFromUrl(el.getAttribute('src')); if (!id) return;
-    if (el.tagName === 'VIDEO') { if (POSTERS[id] && !el.getAttribute('poster')) el.setAttribute('poster', POSTERS[id]); return; }
+    if (el.tagName === 'VIDEO') {
+      if (POSTERS[id] && !el.getAttribute('poster')) el.setAttribute('poster', POSTERS[id]);
+      if (LQIP[id]) { el.style.backgroundImage = 'url("' + LQIP[id] + '")'; el.style.backgroundSize = 'cover'; el.style.backgroundPosition = el.style.objectPosition || '50% 50%'; }
+      return;
+    }
     if (el.complete && el.naturalWidth) return;
     if (LQIP[id]) {
       el.style.backgroundImage = 'url("' + LQIP[id] + '")'; el.style.backgroundSize = 'cover';
@@ -986,7 +990,7 @@ function placeholders(scope){
 var prefetched = {}, prefetchQ = [], prefetchOn = 0;
 function prefetch(list, front){
   list.forEach(function(u){ if (u && !prefetched[u]) { prefetched[u] = 1; if (front) prefetchQ.unshift(u); else prefetchQ.push(u); } });
-  while (prefetchOn < 3 && prefetchQ.length) { prefetchOn++; (function(u){ var im = new Image(); im.decoding = 'async'; im.onload = im.onerror = function(){ prefetchOn--; prefetch([]); }; im.src = u; })(prefetchQ.shift()); }
+  while (prefetchOn < 2 && prefetchQ.length) { prefetchOn++; (function(u){ var im = new Image(); im.decoding = 'async'; im.onload = im.onerror = function(){ prefetchOn--; prefetch([]); }; im.src = u; })(prefetchQ.shift()); }
 }
 function projectImages(p, max){
   var a = []; if (p.cover) a.push(p.cover); p.gallery.forEach(function(m){ a.push(m); (m.swap || []).forEach(function(s){ a.push(s); }); });
@@ -995,7 +999,7 @@ function projectImages(p, max){
 function prefetchAll(){
   if (!PUBLIC || prefetchAll.done) return; prefetchAll.done = 1;
   var go = function(){ visibleProjects().forEach(function(p){ prefetch(projectImages(p, FINE ? 99 : 4)); }); };
-  if (window.requestIdleCallback) requestIdleCallback(go, {timeout:2500}); else setTimeout(go, 1200);
+  setTimeout(function(){ if (window.requestIdleCallback) requestIdleCallback(go, {timeout:3000}); else go(); }, 2500);
 }
 document.addEventListener('pointerover', function(e){
   if (!PUBLIC) return; var a = e.target.closest && e.target.closest('[data-act="open"][data-id]'); if (!a) return;
@@ -1475,7 +1479,7 @@ function ibHTML(){
   var h = '<section class="ib" id="travaux" style="--n:' + n + '"><h2 class="sr">Travaux</h2><div class="ib-pin">';
   list.forEach(function(p, i){
     var pm = popMedia(p).slice(0, 1), it = pm[0];
-    var el = !it ? '' : (it.v ? '<video class="on" src="' + esc(it.s) + '" style="object-position:' + it.p + '" muted loop playsinline preload="metadata"></video>'
+    var el = !it ? '' : (it.v ? '<video class="on" src="' + esc(it.s) + '" style="object-position:' + it.p + '" muted loop playsinline preload="' + (i === 0 ? 'auto' : 'none') + '"></video>'
       : '<img class="on" src="' + esc(it.s) + '" style="object-position:' + it.p + '" alt="" draggable="false">');
     h += '<a class="ibr" href="#' + esc(p.id) + '" data-act="open" data-id="' + esc(p.id) + '" data-pop=\'' + esc(JSON.stringify(pm)) + '\' style="--o:0" aria-label="' + esc(p.title || 'Projet') + '">' +
       '<span class="ibr-row wrap g"><span class="ibr-n">' + tagB(pad(i + 1)) + '</span><span class="ibr-t">' + tagB(p.title || 'Sans titre') + '</span>' +
@@ -1651,7 +1655,7 @@ function hbHTML(){
   var h = '<section class="hb" id="travaux" style="--n:' + n + '"><h2 class="sr">Travaux</h2><div class="hb-pin"><div class="hb-row">';
   list.forEach(function(p, i){
     var pm = popMedia(p).slice(0, 1), it = pm[0];
-    var el = !it ? '' : (it.v ? '<video class="on" src="' + esc(it.s) + '" style="object-position:' + it.p + '" muted loop playsinline preload="auto"></video>'
+    var el = !it ? '' : (it.v ? '<video class="on" src="' + esc(it.s) + '" style="object-position:' + it.p + '" muted loop playsinline preload="' + (i === 0 ? 'auto' : 'none') + '"></video>'
       : '<img class="on" src="' + esc(it.s) + '" style="object-position:' + it.p + '" alt="" fetchpriority="' + (i < 4 ? 'high' : 'auto') + '" draggable="false">');
     h += '<a class="hb-c" href="#' + esc(p.id) + '" data-act="open" data-id="' + esc(p.id) + '" data-pop=\'' + esc(JSON.stringify(pm)) + '\' style="--o:0" aria-label="' + esc(p.title || 'Projet') + '">' +
       '<span class="hb-m">' + el + '</span><span class="hb-t">' + tagB(p.title || 'Sans titre') + '</span>' +
