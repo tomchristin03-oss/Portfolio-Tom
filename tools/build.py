@@ -155,18 +155,37 @@ def main(live_path, raw_dir):
         if 'p' in e: pu['p'][i] = 'media/' + e['p']
         if 'l' in e: pu['l'][i] = e['l']
     body = re.sub(r'<title>.*?</title>', '', body, count=1, flags=re.S)
+    # page plus légère : les polices sont servies en fichiers (cache navigateur), le plan de travail typo part dans fx.html (chargé seulement sur la fiche qui l'utilise)
+    body = re.sub(r'(<script[^>]*id="pf-fontdata"[^>]*>).*?(</script>)', r'\1{}\2', body, count=1, flags=re.S)
+    mfx = re.search(r'<script[^>]*id="pf-fx"[^>]*>(.*?)</script>\s*', body, re.S)
+    if mfx:
+        try:
+            open(os.path.join(SITE, 'fx.html'), 'wb').write(base64.b64decode(re.sub(r'\s+', '', mfx.group(1))))
+        except Exception as ex:
+            print('fx.html non écrit :', ex)
+        body = body[:mfx.start()] + body[mfx.end():]
+    # la police de secours Google (Inter Tight) n'est plus chargée : la vraie police du site est servie depuis media/
+    body = body.replace('<link id="pf-fonts" rel="stylesheet"', '<link id="pf-fonts" rel="alternate"', 1)
     body = body.replace('<meta name="claude:viewport-fit-sides" content="cover">', '', 1)
     inj = '<script type="application/json" id="pf-urls">' + json.dumps(pu) + '</script>\n'
     k = body.index('<script id="pf-app"'); body = body[:k] + inj + body[k:]
     # les miniatures de l'accueil partent en premier
     # les images de l'accueil (miniatures, images d'attente des vidéos) partent en premier
-    pre = ''.join('<link rel="preload" as="image" href="media/%s" fetchpriority="high">' % (man[i].get('t') or man[i]['p'])
-                  for i in cover_ids(st) if i in man and (man[i].get('t') or man[i].get('p')))
-    head = ('<!doctype html>\n<html lang="fr"><head><meta charset="utf-8">'
+    pre = ''.join('<link rel="preload" as="image" href="media/%s"%s>' % (man[i].get('t') or man[i]['p'], ' fetchpriority="high"' if k < 2 else '')
+                  for k, i in enumerate([i for i in cover_ids(st) if i in man and (man[i].get('t') or man[i].get('p'))][:4]))
+    for key in ('regular', 'italic'):
+        f = ((st.get('style') or {}).get('fonts') or {}).get(key) or {}
+        mm = re.match(r'^/_blob/([A-Za-z0-9_-]+)$', str(f.get('src', '')))
+        if mm and mm.group(1) in man:
+            pre += '<link rel="preload" as="font" type="font/%s" href="media/%s" crossorigin>' % (f.get('format') or 'woff2', man[mm.group(1)]['u'])
+    desc = 'Portfolio of Tom Christin-Leymarie, art director and graphic designer based in Paris: visual identity, publishing, typography, textiles and AI.'
+    head = ('<!doctype html>\n<html lang="en"><head><meta charset="utf-8">'
       '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">'
-      '<title>Tom Christin-Leymarie — Direction artistique & design graphique</title>'
-      '<meta name="description" content="Portfolio de Tom Christin-Leymarie, directeur artistique et graphiste basé à Paris : identité visuelle, édition, typographie, textile, IA.">'
-      '<meta property="og:title" content="Tom Christin-Leymarie — Portfolio"><meta property="og:type" content="website">'
+      '<title>Tom Christin-Leymarie — Art direction & graphic design</title>'
+      '<meta name="description" content="' + desc + '">'
+      '<meta name="theme-color" content="#ffffff">'
+      '<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%223%22 fill=%22%230A0A0A%22/%3E%3Ctext x=%2216%22 y=%2222%22 font-family=%22Helvetica,Arial%22 font-size=%2215%22 text-anchor=%22middle%22 fill=%22white%22%3ETC%3C/text%3E%3C/svg%3E">'
+      '<meta property="og:title" content="Tom Christin-Leymarie — Portfolio"><meta property="og:description" content="' + desc + '"><meta property="og:type" content="website">'
       + pre + '<style>body{margin:0}</style></head><body>\n')
     open(os.path.join(SITE, 'index.html'), 'w', encoding='utf-8').write(head + body + '\n</body></html>\n')
 
