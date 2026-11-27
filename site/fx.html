@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7890,6 +7890,10 @@
   .fx-inline.fx-touch #preview{touch-action:pan-y}
   .fx-inline.fx-touch.fx-awake #preview{touch-action:none}
   .fx-inline #fxclose{display:none}
+  /* plein écran (demandé par la page) : l'outil prend tout l'écran, le panneau défile seul */
+  .fx-inline.fx-full, .fx-inline.fx-full body{height:100%; overflow:hidden}
+  .fx-full .fx-veil{display:none !important}
+  .fx-full #preview{touch-action:none !important}
   @media (max-width:860px){
     body{overflow:auto}
     .fx-inline, .fx-inline body{height:auto; overflow:visible}
@@ -7901,6 +7905,32 @@
     header .fontname{max-width:120px}
     #compohint{display:none}
   }
+  .fx-inline.fx-full .app{height:100vh; height:100dvh; min-height:0}
+  /* téléphone en plein écran : le plan en haut, les réglages en bas, visibles en même temps.
+     La barre d'outils tient sur une ligne qui défile ; les réglages passent en onglets courts. */
+  @media (max-width:860px){
+    .fx-inline.fx-full .app{grid-template-rows:auto minmax(0,1fr) auto; height:100dvh}
+    .fx-inline.fx-full header{display:none}
+    .fx-inline.fx-full .stagebar{flex-wrap:nowrap; padding:6px 8px; gap:6px; overflow-x:auto; scrollbar-width:none}
+    .fx-inline.fx-full .stagebar::-webkit-scrollbar{display:none}
+    .fx-inline.fx-full #compoctl{flex-wrap:nowrap !important; flex-basis:auto !important; gap:6px !important}
+    .fx-inline.fx-full #compoctl .tgrp{flex:0 0 auto}
+    .fx-inline.fx-full .stagebar .filebtn.ico{padding:6px 7px}
+    .fx-inline.fx-full #dropchar{width:84px !important}
+    .fx-inline.fx-full .statusbar{display:none}
+    .fx-inline.fx-full aside{height:40dvh; max-height:40dvh; overflow:hidden; padding:0; display:flex; flex-direction:column}
+    .fx-tabs{display:flex; flex:0 0 auto; overflow-x:auto; scrollbar-width:none; border-bottom:1px solid var(--ink); background:var(--panel)}
+    .fx-tabs::-webkit-scrollbar{display:none}
+    .fx-tabs button{flex:0 0 auto; border:0; border-right:1px solid var(--rule); background:transparent; font:inherit; font-size:10px; letter-spacing:.16em; text-transform:uppercase; padding:11px 14px; color:var(--ink); cursor:pointer}
+    .fx-tabs button.on{background:var(--ink); color:#fff; font-weight:700}
+    .fx-tabbody{flex:1; min-height:0; overflow:auto; padding:0 14px 14px}
+    .fx-tabbody .sect.tab-off{display:none !important}
+    .fx-tabbody .secthead{display:none}
+    .fx-tabbody .seg.styles{grid-template-columns:repeat(4,1fr)}
+    .fx-tabbody .seg.styles canvas{height:40px}
+  }
+  .fx-tabs{display:none}
+  @media (max-width:860px){ .fx-inline.fx-full .fx-tabs{display:flex} }
 </style>
 </head>
 <body>
@@ -7910,7 +7940,7 @@
   <div class="lhead">
     <div class="logo"><b>FONT</b>-EXTRUDER</div>
     <div class="sep"></div>
-    <div class="fontname" id="lfontname">aucune typo chargée</div>
+    <div class="fontname" id="lfontname">no typeface loaded</div>
   </div>
   <div class="lbody">
     <canvas id="launchgrid"></canvas>
@@ -7919,16 +7949,16 @@
       <span class="cm cm-bl"></span><span class="cm cm-br"></span>
       <div class="drop" id="dropzone">
         <div class="aa">Aa</div>
-        <div class="t1">Importer une typo</div>
-        <div class="t2">.ttf &nbsp;·&nbsp; .otf<br>clique ici ou glisse le fichier</div>
+        <div class="t1">Import a typeface</div>
+        <div class="t2">.ttf &nbsp;·&nbsp; .otf<br>click here or drop the file</div>
       </div>
     </div>
     <div class="lfoot">
       <div class="lerr" id="launcherr"></div>
       <div class="lbtns">
         <button class="filebtn ico" id="backtowork" style="display:none">
-          <svg viewBox="0 0 16 16"><path d="M6.5 3.5 11 8l-4.5 4.5"/></svg><span>Revenir à mon travail</span></button>
-        <button class="filebtn" id="openprojlaunch">Ouvrir un projet (.fxproj)</button>
+          <svg viewBox="0 0 16 16"><path d="M6.5 3.5 11 8l-4.5 4.5"/></svg><span>Back to my work</span></button>
+        <button class="filebtn" id="openprojlaunch">Open a project (.fxproj)</button>
       </div>
     </div>
   </div>
@@ -7938,138 +7968,138 @@
   <header>
     <div class="logo"><b>FONT</b>-EXTRUDER</div>
     <div class="sep"></div>
-    <div class="fontname" id="fontname">aucune typo chargée</div>
-    <button class="filebtn ico" id="backmenu" title="Retour au menu d'accueil">
+    <div class="fontname" id="fontname">no typeface loaded</div>
+    <button class="filebtn ico" id="backmenu" title="Back to the start menu">
       <svg viewBox="0 0 16 16"><path d="M9.5 3.5 5 8l4.5 4.5"/></svg><span>Menu</span></button>
-    <button class="filebtn ico" id="loadbtn" title="Charger une autre typo">
-      <svg viewBox="0 0 16 16"><path d="M8 11V3M8 3 5 6M8 3l3 3M3 12.5h10"/></svg><span>Changer de typo</span></button>
+    <button class="filebtn ico" id="loadbtn" title="Load another typeface">
+      <svg viewBox="0 0 16 16"><path d="M8 11V3M8 3 5 6M8 3l3 3M3 12.5h10"/></svg><span>Change typeface</span></button>
     <input type="file" id="file" accept=".ttf,.otf,.woff" hidden>
-    <button class="filebtn ico fx-close" id="fxclose" title="Fermer le plan de travail"><svg viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8"/></svg><span>Fermer</span></button>
+    <button class="filebtn ico fx-close" id="fxclose" title="Close the workspace"><svg viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8"/></svg><span>Close</span></button>
   </header>
 
     <div class="stagebar">
       <div class="seg" id="modeseg" style="display:inline-grid; grid-template-columns:1fr 1fr; width:auto; margin:0">
-        <button data-mo="word" class="on" style="padding:6px 14px">Spécimen</button>
-        <button data-mo="compo" style="padding:6px 14px">Plan de travail</button>
+        <button data-mo="word" class="on" style="padding:6px 14px">Specimen</button>
+        <button data-mo="compo" style="padding:6px 14px">Workspace</button>
       </div>
-      <span class="t" id="wordlab">Texte</span>
-      <input id="wordinput" value="PATH" spellcheck="false" placeholder="tape un mot…">
+      <span class="t" id="wordlab">Text</span>
+      <input id="wordinput" value="PATH" spellcheck="false" placeholder="type a word…">
       <span id="compoctl" style="display:none; align-items:center; gap:8px 12px; flex-wrap:wrap; flex-basis:100%">
 
         <span class="tgrp">
-          <span class="t">Texte</span>
+          <span class="t">Text</span>
           <input id="dropchar" class="fix" value="ABC" spellcheck="false" style="width:110px; text-align:left; text-transform:none">
-          <span class="t">Corps</span>
+          <span class="t">Size</span>
           <input id="ptsize" class="fix" type="number" min="8" max="1200" step="1" value="150" style="width:58px; text-align:right"><span class="t" style="opacity:.6">pt</span>
         </span>
 
         <span class="vsep"></span>
 
         <span class="tgrp">
-          <button class="filebtn ico" id="undobtn" title="Annuler (⌘/Ctrl Z)">
+          <button class="filebtn ico" id="undobtn" title="Undo (⌘/Ctrl Z)">
             <svg viewBox="0 0 16 16"><path d="M6 4 3 7l3 3M3 7h6.5a3.5 3.5 0 0 1 0 7H7"/></svg></button>
-          <button class="filebtn ico" id="redobtn" title="Rétablir (⌘/Ctrl Maj Z)">
+          <button class="filebtn ico" id="redobtn" title="Redo (⌘/Ctrl Shift Z)">
             <svg viewBox="0 0 16 16"><path d="M10 4l3 3-3 3M13 7H6.5a3.5 3.5 0 0 0 0 7H9"/></svg></button>
         </span>
 
         <span class="vsep"></span>
 
         <span class="tgrp">
-          <button class="filebtn ico" id="pipettebtn" title="Pipette : copier un style de lettre">
-            <svg viewBox="0 0 16 16"><path d="M10.5 2.5 13.5 5.5M11.8 4.2 6 10v2h2l5.8-5.8M5 12l-2 2"/></svg><span>Pipette</span></button>
-          <button class="filebtn ico" id="resetview" title="Recadrer la vue (zoom 100 %)">
-            <svg viewBox="0 0 16 16"><path d="M2 5.5V2h3.5M14 5.5V2h-3.5M2 10.5V14h3.5M14 10.5V14h-3.5"/></svg><span>Recadrer</span></button>
+          <button class="filebtn ico" id="pipettebtn" title="Eyedropper: copy a letter style">
+            <svg viewBox="0 0 16 16"><path d="M10.5 2.5 13.5 5.5M11.8 4.2 6 10v2h2l5.8-5.8M5 12l-2 2"/></svg><span>Eyedropper</span></button>
+          <button class="filebtn ico" id="resetview" title="Reset the view (100% zoom)">
+            <svg viewBox="0 0 16 16"><path d="M2 5.5V2h3.5M14 5.5V2h-3.5M2 10.5V14h3.5M14 10.5V14h-3.5"/></svg><span>Reset view</span></button>
         </span>
 
         <span class="vsep"></span>
 
         <span class="tgrp" id="aligngrp">
-          <button class="filebtn ico" data-al="left" title="Aligner à gauche">
+          <button class="filebtn ico" data-al="left" title="Align left">
             <svg viewBox="0 0 16 16"><path d="M2.5 2v12M5 5h8M5 11h5"/></svg></button>
-          <button class="filebtn ico" data-al="hcenter" title="Centrer horizontalement">
+          <button class="filebtn ico" data-al="hcenter" title="Center horizontally">
             <svg viewBox="0 0 16 16"><path d="M8 2v12M4 5h8M5.5 11h5"/></svg></button>
-          <button class="filebtn ico" data-al="right" title="Aligner à droite">
+          <button class="filebtn ico" data-al="right" title="Align right">
             <svg viewBox="0 0 16 16"><path d="M13.5 2v12M3 5h8M6 11h5"/></svg></button>
-          <button class="filebtn ico" data-al="top" title="Aligner en haut">
+          <button class="filebtn ico" data-al="top" title="Align top">
             <svg viewBox="0 0 16 16"><path d="M2 2.5h12M5 5v8M11 5v5"/></svg></button>
-          <button class="filebtn ico" data-al="vcenter" title="Centrer verticalement">
+          <button class="filebtn ico" data-al="vcenter" title="Center vertically">
             <svg viewBox="0 0 16 16"><path d="M2 8h12M5 4v8M11 5.5v5"/></svg></button>
-          <button class="filebtn ico" data-al="bottom" title="Aligner en bas">
+          <button class="filebtn ico" data-al="bottom" title="Align bottom">
             <svg viewBox="0 0 16 16"><path d="M2 13.5h12M5 3v8M11 6v5"/></svg></button>
-          <button class="filebtn ico" data-al="disth" title="Répartir l'espacement horizontal">
+          <button class="filebtn ico" data-al="disth" title="Distribute horizontally">
             <svg viewBox="0 0 16 16"><path d="M2.5 2.5v11M13.5 2.5v11M5.5 8h5M5.5 8l1.6-1.6M5.5 8l1.6 1.6M10.5 8L8.9 6.4M10.5 8l-1.6 1.6"/></svg></button>
-          <button class="filebtn ico" data-al="distv" title="Répartir l'espacement vertical">
+          <button class="filebtn ico" data-al="distv" title="Distribute vertically">
             <svg viewBox="0 0 16 16"><path d="M2.5 2.5h11M2.5 13.5h11M8 5.5v5M8 5.5L6.4 7.1M8 5.5l1.6 1.6M8 10.5L6.4 8.9M8 10.5l1.6-1.6"/></svg></button>
         </span>
 
         <span class="vsep"></span>
 
         <span class="tgrp">
-          <button class="filebtn ico" id="delsel" title="Supprimer la sélection (Suppr)">
-            <svg viewBox="0 0 16 16"><path d="M3 4.5h10M6.2 4.5V2.6h3.6v1.9M4.6 4.5 5.5 14h5l.9-9.5"/></svg><span>Supprimer</span></button>
-          <button class="filebtn ico" id="clearcompo" title="Vider toute la composition">
-            <svg viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8"/></svg><span>Vider</span></button>
+          <button class="filebtn ico" id="delsel" title="Delete the selection (Del)">
+            <svg viewBox="0 0 16 16"><path d="M3 4.5h10M6.2 4.5V2.6h3.6v1.9M4.6 4.5 5.5 14h5l.9-9.5"/></svg><span>Delete</span></button>
+          <button class="filebtn ico" id="clearcompo" title="Clear the whole composition">
+            <svg viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8"/></svg><span>Clear</span></button>
         </span>
 
         <span class="vsep"></span>
 
         <span class="tgrp">
-          <button class="filebtn ico" id="exportsvg" title="Exporter la composition en SVG">
+          <button class="filebtn ico" id="exportsvg" title="Export the composition as SVG">
             <svg viewBox="0 0 16 16"><path d="M8 3v7M5 8l3 3 3-3M3 13h10"/></svg><span>SVG</span></button>
-          <button class="filebtn ico" id="exportstyles" title="Exporter un .otf par style distinct">
+          <button class="filebtn ico" id="exportstyles" title="Export one .otf per style">
             <svg viewBox="0 0 16 16"><path d="M8 2 2 5.5 8 9l6-3.5zM2 10.5 8 14l6-3.5"/></svg><span>Styles</span></button>
         </span>
 
-        <span class="t" id="compohint" style="opacity:.55; flex-basis:100%">clic = poser · glisser = déplacer · Maj+clic / Maj+glisser = sélection · ⌘C ⌘V ⌘Z ⌘A · molette = zoom</span>
+        <span class="t" id="compohint" style="opacity:.55; flex-basis:100%">click = place · drag = move · Shift+click / Shift+drag = select · ⌘C ⌘V ⌘Z ⌘A · wheel = zoom</span>
       </span>
     </div>
   <section class="stage">
     <canvas id="preview"></canvas>
-    <div class="fx-wait" id="fxwait">Chargement de la typo…</div>
-    <div class="fx-veil" id="fxveil"><span>Touche pour composer</span></div>
+    <div class="fx-wait" id="fxwait">Loading the typeface…</div>
+    <div class="fx-veil" id="fxveil"><span>Tap to compose</span></div>
     <div class="statusbar" id="statusbar">
       <span id="sbfont">—</span><span class="sbsep"></span>
-      <span id="sbmode">Aperçu</span><span class="sbsep"></span>
+      <span id="sbmode">Preview</span><span class="sbsep"></span>
       <span id="sbinfo"></span>
       <span style="flex:1"></span>
       <span id="sbmsg"></span>
     </div>
     <div class="hint" id="hint">
       <div class="keycap">Aa</div>
-      <div>charge ta typo, puis <b>tape un mot</b> dans le champ ci-dessus</div>
+      <div>load your typeface, then <b>type a word</b> in the field above</div>
     </div>
   </section>
 
   <aside>
     <!-- ═══ RENDU ═══ -->
     <div class="sect">
-      <div class="secthead">Rendu</div>
+      <div class="secthead">Render</div>
       <div class="group">
         <div class="seg styles" id="styleseg">
-          <button data-m="contour"><canvas></canvas><span>Trait</span></button>
-          <button data-m="extr_black" class="on"><canvas></canvas><span>Volume plein</span></button>
-          <button data-m="face_black"><canvas></canvas><span>Face pleine</span></button>
-          <button data-m="wire3d"><canvas></canvas><span>Filaire</span></button>
+          <button data-m="contour"><canvas></canvas><span>Line</span></button>
+          <button data-m="extr_black" class="on"><canvas></canvas><span>Solid volume</span></button>
+          <button data-m="face_black"><canvas></canvas><span>Solid face</span></button>
+          <button data-m="wire3d"><canvas></canvas><span>Wireframe</span></button>
         </div>
       </div>
       <div class="group">
-        <label><span class="lab">Contour</span><input type="number" class="num" id="nstroke" min="0.3" max="3" step="0.1" value="1"></label>
+        <label><span class="lab">Stroke</span><input type="number" class="num" id="nstroke" min="0.3" max="3" step="0.1" value="1"></label>
         <input type="range" id="stroke" min="0.3" max="3" step="0.1" value="1">
       </div>
       <div class="group">
-        <div class="dialrow"><span class="lab">Couleur du trait</span>
-          <button class="swatch" id="inkswatch" data-for="inkcol" title="Choisir la couleur"></button>
+        <div class="dialrow"><span class="lab">Line colour</span>
+          <button class="swatch" id="inkswatch" data-for="inkcol" title="Pick a colour"></button>
           <input class="hex" id="inkcol" value="#000000" spellcheck="false" maxlength="7"></div>
-        <div class="dialrow" style="margin-top:10px"><span class="lab">Couleur du fond</span>
-          <button class="swatch" id="paperswatch" data-for="papercol" title="Choisir la couleur"></button>
+        <div class="dialrow" style="margin-top:10px"><span class="lab">Background colour</span>
+          <button class="swatch" id="paperswatch" data-for="papercol" title="Pick a colour"></button>
           <input class="hex" id="papercol" value="#FFFFFF" spellcheck="false" maxlength="7"></div>
               </div>
 
       <!-- nuancier : roue chromatique + luminosité + hexadécimal -->
       <div id="cpick">
         <div class="cptop">
-          <canvas id="cpsb" width="152" height="152" title="Saturation / Luminosité"></canvas>
-          <canvas id="cphue" width="16" height="152" title="Teinte"></canvas>
+          <canvas id="cpsb" width="152" height="152" title="Saturation / Brightness"></canvas>
+          <canvas id="cphue" width="16" height="152" title="Hue"></canvas>
         </div>
         <div class="cpfields">
           <span class="cpprev" id="cpprev"></span>
@@ -8080,9 +8110,9 @@
         <div class="cprow"><span class="lab">Hex</span><input id="cphex" maxlength="7" spellcheck="false"></div>
       </div>
       <div class="group" id="linesgroup">
-        <label><span class="lab">Densité</span><input type="number" class="num" id="nlines" min="0" max="200" step="1" value="60"></label>
+        <label><span class="lab">Density</span><input type="number" class="num" id="nlines" min="0" max="200" step="1" value="60"></label>
         <input type="range" id="lines" min="0" max="200" step="1" value="60">
-        <div class="tip">0 = un trait à chaque angle. Au-delà, motif régulier sur toute la lettre.</div>
+        <div class="tip">0 = one line at each corner. Above that, an even pattern across the letter.</div>
       </div>
     </div>
 
@@ -8090,14 +8120,14 @@
     <div class="sect">
       <div class="secthead">Volume</div>
       <div class="group">
-        <label><span class="lab">Profondeur</span><input type="number" class="num" id="ndepth" min="0" max="300" step="0.5" value="9"></label>
+        <label><span class="lab">Depth</span><input type="number" class="num" id="ndepth" min="0" max="300" step="0.5" value="9"></label>
         <input type="range" id="depth" min="0" max="300" step="0.5" value="9">
       </div>
       <div class="group">
-        <label><span class="lab">Dégradé de profondeur</span><input type="number" class="num" id="nvaramt" min="0" max="100" step="1" value="0"></label>
+        <label><span class="lab">Depth gradient</span><input type="number" class="num" id="nvaramt" min="0" max="100" step="1" value="0"></label>
         <input type="range" id="varamt" min="0" max="100" step="1" value="0">
         <div id="vargradgroup" style="display:none">
-          <label class="dialrow" style="margin-top:12px"><span class="lab">Axe du dégradé</span>
+          <label class="dialrow" style="margin-top:12px"><span class="lab">Gradient axis</span>
             <input type="number" class="num" id="nvargrad" min="0" max="359" step="1" value="90"></label>
           <input type="range" id="vargrad" min="0" max="359" step="1" value="90">
         </div>
@@ -8106,26 +8136,26 @@
 
     <!-- ═══ VUE ═══ -->
     <div class="sect">
-      <div class="secthead">Vue</div>
+      <div class="secthead">View</div>
       <div class="group">
         <div class="seg" id="projseg" style="grid-template-columns:1fr 1fr">
-          <button data-p="iso" class="on">Isométrique</button>
+          <button data-p="iso" class="on">Isometric</button>
           <button data-p="3d">3D</button>
         </div>
       </div>
 
       <div class="group" id="anglegroup">
-        <label class="dialrow"><span class="lab">Axe d'extrusion</span>
+        <label class="dialrow"><span class="lab">Extrusion axis</span>
           <input type="number" class="num" id="nangle" min="0" max="359" step="1" value="210"></label>
         <input type="range" id="angle" min="0" max="359" step="1" value="210">
       </div>
 
       <div class="group" id="rot3dgroup">
-        <label><span class="lab">Bascule · X</span><input type="number" class="num" id="nrx" min="-89" max="89" step="1" value="20"></label>
+        <label><span class="lab">Tilt · X</span><input type="number" class="num" id="nrx" min="-89" max="89" step="1" value="20"></label>
         <input type="range" id="rx" min="-89" max="89" step="1" value="20">
-        <label style="margin-top:10px"><span class="lab">Pivot · Y</span><input type="number" class="num" id="nry" min="-180" max="180" step="1" value="-30"></label>
+        <label style="margin-top:10px"><span class="lab">Turn · Y</span><input type="number" class="num" id="nry" min="-180" max="180" step="1" value="-30"></label>
         <input type="range" id="ry" min="-180" max="180" step="1" value="-30">
-        <label class="dialrow" style="margin-top:10px"><span class="lab">Inclinaison · Z</span>
+        <label class="dialrow" style="margin-top:10px"><span class="lab">Roll · Z</span>
           <input type="number" class="num" id="nrz" min="-180" max="180" step="1" value="0"></label>
         <input type="range" id="rz" min="-180" max="180" step="1" value="0">
       </div>
@@ -8133,7 +8163,7 @@
 
     <!-- ═══ LETTRE ═══ -->
     <div class="sect">
-      <div class="secthead">Lettre</div>
+      <div class="secthead">Letter</div>
       <div class="group">
         <label class="dialrow"><span class="lab">Rotation</span>
           <input type="number" class="num" id="nrot" min="-180" max="180" step="1" value="0"></label>
@@ -8143,14 +8173,14 @@
 
     <!-- ═══ AMAS SÉLECTIONNÉ (mode Composition) ═══ -->
     <div class="sect" id="grouprotgroup" style="display:none">
-      <div class="secthead">Orbite de la sélection</div>
+      <div class="secthead">Orbit the selection</div>
       <div class="group">
-        <label class="dialrow"><span class="lab">Azimut</span>
+        <label class="dialrow"><span class="lab">Azimuth</span>
           <input type="number" class="num" id="ngaz" min="-180" max="180" step="1" value="0"></label>
         <input type="range" id="gaz" min="-180" max="180" step="1" value="0">
-        <label style="margin-top:10px"><span class="lab">Élévation</span><input type="number" class="num" id="ngel" min="-60" max="60" step="1" value="0"></label>
+        <label style="margin-top:10px"><span class="lab">Elevation</span><input type="number" class="num" id="ngel" min="-60" max="60" step="1" value="0"></label>
         <input type="range" id="gel" min="-60" max="60" step="1" value="0">
-        <div class="tip">La caméra tourne autour de l'amas posé au sol : les verticales restent verticales, les hauteurs sont préservées. Relâche = validé, ⌘Z pour annuler.</div>
+        <div class="tip">The camera turns around the group on the ground: verticals stay vertical and heights are kept. Release = done, ⌘Z to undo.</div>
       </div>
     </div>
 
@@ -8161,7 +8191,7 @@
       <button class="filebtn" id="saveprojbtn" disabled style="margin-top:10px; width:100%">Enregistrer le projet</button>
       <button class="filebtn" id="openprojbtn" style="margin-top:4px; width:100%">Ouvrir un projet…</button>
       <input type="file" id="projfile" accept=".fxproj,.json,application/json" hidden>
-      <div class="tip">Le projet (.fxproj) garde la typo, tous les réglages et la composition.</div>
+      <div class="tip">The project (.fxproj) keeps the typeface, every setting and the composition.</div>
     </div>
   </aside>
 
@@ -8171,13 +8201,13 @@
       <div class="sheethead"><span>Exporter</span><button id="closeexport" title="Fermer">✕</button></div>
       <div class="sheetbody">
         <div class="namefield">
-          <span class="lab">Nom du fichier exporté</span>
+          <span class="lab">Exported file name</span>
           <input type="text" id="fontnameout" placeholder="laisser vide = auto" spellcheck="false">
         </div>
 
         <div class="xrow reco">
-          <div class="xtxt"><b>SVG · vecteurs</b><i>Recommandé</i>
-            <p>Tracés éditables pour Illustrator. Aucune police à installer.</p></div>
+          <div class="xtxt"><b>SVG · vecteurs</b><i>Recommended</i>
+            <p>Editable paths for Illustrator. No font to install.</p></div>
           <button class="btn" id="exportsvgbtn" disabled>Exporter</button>
         </div>
 
@@ -8189,12 +8219,12 @@
 
         <div class="xrow" id="xrowstyles">
           <div class="xtxt"><b>Un .otf par style</b>
-            <p>Plan de travail : une police par style distinct de la sélection.</p></div>
+            <p>Workspace: one font per style in the selection.</p></div>
           <button class="btn" id="exportstyles2" disabled>Exporter</button>
         </div>
 
         <label class="chk"><input type="checkbox" id="allset"> exporter tout le jeu Latin (plus lent)</label>
-        <a class="dl" id="dl" download>⬇ Télécharger</a>
+        <a class="dl" id="dl" download>⬇ Download</a>
       </div>
     </div>
   </div>
@@ -8892,10 +8922,10 @@ function rerender(){ if(compo) renderCompo(); else renderPreview(); updateStatus
 
 // ---- pipette de style ----
 function pipetteToggle(){ if(pipette.state==='off'){ pipette.state='pick'; preview.style.cursor='crosshair';
-   pipettebtn.classList.add('on'); setStatus('Pipette : clique la lettre SOURCE'); }
+   pipettebtn.classList.add('on'); setStatus('Eyedropper: click the SOURCE letter'); }
  else { pipette.state='off'; pipette.style=null; preview.style.cursor=''; pipettebtn.classList.remove('on'); setStatus(''); } }
 function pipettePick(i){ pipette.style=styleOf(compoLetters[i]); pipette.state='paint'; preview.style.cursor='copy';
- setStatus('Style copié — clique les lettres à peindre (Échap pour finir)'); }
+ setStatus('Style copied: click the letters to paint (Esc to finish)'); }
 function pipettePaint(i){ if(!pipette.style)return; pushUndo(); Object.assign(compoLetters[i], pipette.style);
  compoLetters[i]._ink=null; renderCompo(); }
 
@@ -8903,7 +8933,7 @@ function pipettePaint(i){ if(!pipette.style)return; pushUndo(); Object.assign(co
 function copySel(){ const ids=selIds(); if(!ids.length)return;
  const arr=ids.map(i=>compoLetters[i]); const cx=arr.reduce((a,L)=>a+L.x,0)/arr.length, cy=arr.reduce((a,L)=>a+L.y,0)/arr.length;
  clipLetters=arr.map(({_ink,_screen,...r})=>Object.assign({},r,{x:r.x-cx,y:r.y-cy}));
- setStatus(clipLetters.length+' lettre(s) copiée(s)'); }
+ setStatus(clipLetters.length+' letter(s) copied'); }
 function pasteClip(){ if(!clipLetters.length)return; pushUndo();
  const[wx,wy]=lastWorld; const start=compoLetters.length;
  for(const c of clipLetters) compoLetters.push(Object.assign({},c,{x:wx+c.x, y:wy+c.y, _ink:null,_screen:null}));
@@ -9051,7 +9081,7 @@ function triggerDownload(buf,fname){
    for(let i=0;i<bytes.length;i+=CH){ bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+CH)); }
    window.pywebview.api.save_font(btoa(bin),fname).then(r=>{
      if(r&&r.ok){ elStatus.className='status'; elStatus.textContent='✓ Enregistré : '+r.path+' ('+Math.round(r.bytes/1024)+' Ko)'; }
-     else if(r&&r.msg==='annulé'){ elStatus.className='status'; elStatus.textContent='Enregistrement annulé.'; }
+     else if(r&&r.msg==='annulé'){ elStatus.className='status'; elStatus.textContent='Save cancelled.'; }
      else { elStatus.className='status err'; elStatus.textContent='Erreur : '+((r&&r.msg)||'?'); }
    });
    return;
@@ -9097,7 +9127,7 @@ async function exportOTF(){
    const fname=fam.replace(/\s+/g,'')+'.otf';
    const kb=Math.round(buf.byteLength/1024);
    // bouton fiable : chaque clic = vrai geste utilisateur -> téléchargement non bloqué
-   dl.textContent='⬇ Télécharger '+fname+'  ('+kb+' Ko)';
+   dl.textContent='⬇ Download '+fname+'  ('+kb+' Ko)';
    dl.classList.add('on');
    dl.onclick=ev=>{ ev.preventDefault(); triggerDownload(buf,fname); };
    elStatus.className='status';
@@ -9135,7 +9165,7 @@ async function buildOtf(suffix){
 async function exportStyles(){
  if(!font){ showErr('charge d\'abord une typo'); return; }
  const ids=compoSelSet.size?[...compoSelSet]:compoLetters.map((_,i)=>i);
- if(!ids.length){ showErr('Plan de travail : sélectionne des lettres (ou pose un texte) à exporter'); return; }
+ if(!ids.length){ showErr('Workspace: select letters (or place some text) to export'); return; }
  // styles distincts (réglages hors position/pt — le corps n'affecte pas la police)
  const seen=new Map();
  for(const i of ids){ const st=styleOf(compoLetters[i]); const {pt,...sig}=st; const key=JSON.stringify(sig);
@@ -9201,14 +9231,14 @@ function buildWordSVG(){
 function saveText(str,fname,mime){
  if(window.pywebview&&window.pywebview.api&&window.pywebview.api.save_font){
    window.pywebview.api.save_font(btoa(unescape(encodeURIComponent(str))),fname).then(r=>{
-     if(r&&r.ok) setStatus('✓ SVG enregistré : '+r.path);
-     else if(r&&r.msg==='annulé') setStatus('Enregistrement annulé.');
+     if(r&&r.ok) setStatus('✓ SVG saved: '+r.path);
+     else if(r&&r.msg==='annulé') setStatus('Save cancelled.');
      else { elStatus.className='status err'; elStatus.textContent='Erreur : '+((r&&r.msg)||'?'); } });
  } else { const blob=new Blob([str],{type:mime}); const url=URL.createObjectURL(blob);
    const a=document.createElement('a'); a.href=url; a.download=fname; a.style.display='none';
    document.body.appendChild(a); a.click();
    setTimeout(()=>{try{document.body.removeChild(a);}catch(e){}URL.revokeObjectURL(url);},3000);
-   setStatus('✓ SVG téléchargé : '+fname); }
+   setStatus('✓ SVG downloaded: '+fname); }
 }
 function exportSVG(){
  if(!font){ showErr('charge d\'abord une typo'); return; }
@@ -9261,7 +9291,7 @@ function saveProject(){
  if(window.pywebview&&window.pywebview.api&&window.pywebview.api.save_font){
    window.pywebview.api.save_font(btoa(unescape(encodeURIComponent(json))),fname).then(r=>{
      if(r&&r.ok){ elStatus.className='status'; elStatus.textContent='✓ Projet enregistré : '+r.path; }
-     else if(r&&r.msg==='annulé'){ elStatus.className='status'; elStatus.textContent='Enregistrement annulé.'; }
+     else if(r&&r.msg==='annulé'){ elStatus.className='status'; elStatus.textContent='Save cancelled.'; }
      else { elStatus.className='status err'; elStatus.textContent='Erreur : '+((r&&r.msg)||'?'); }
    });
  } else {
@@ -9398,7 +9428,7 @@ async function exportVariable(){
    const r=await window.pywebview.api.export_variable(btoa(bin),params);
    if(r&&r.ok){ elStatus.className='status';
      elStatus.textContent='✓ Fonte variable : '+r.path+' ('+Math.round(r.bytes/1024)+' Ko) — axe « Depth » 0→1'; }
-   else if(r&&r.msg==='annulé'){ elStatus.className='status'; elStatus.textContent='Enregistrement annulé.'; }
+   else if(r&&r.msg==='annulé'){ elStatus.className='status'; elStatus.textContent='Save cancelled.'; }
    else { elStatus.className='status err'; elStatus.textContent='Erreur : '+((r&&r.msg)||'?'); }
  }catch(e){ elStatus.className='status err'; elStatus.textContent='Erreur : '+(e&&e.message?e.message:e); }
  finally{ exportvfbtn.disabled=false; }
@@ -9432,7 +9462,7 @@ async function exportColor(){
      fname:((custom||safeFamily()).replace(/\s+/g,''))+'.otf' };
    const r=await window.pywebview.api.export_color(glyphs,params);
    if(r&&r.ok){ elStatus.className='status'; elStatus.textContent='✓ Fonte couleur : '+r.path+' ('+Math.round(r.bytes/1024)+' Ko) — blanc + noir (COLR)'; }
-   else if(r&&r.msg==='annulé'){ elStatus.className='status'; elStatus.textContent='Enregistrement annulé.'; }
+   else if(r&&r.msg==='annulé'){ elStatus.className='status'; elStatus.textContent='Save cancelled.'; }
    else { elStatus.className='status err'; elStatus.textContent='Erreur : '+((r&&r.msg)||'?'); }
  }catch(e){ elStatus.className='status err'; elStatus.textContent='Erreur : '+(e&&e.message?e.message:e); }
  finally{ exportcolorbtn.disabled=false; prog.classList.remove('on'); }
@@ -9473,7 +9503,7 @@ backtowork.addEventListener('click',backToWork);
 backmenu.addEventListener('click',()=>{
  launch.classList.remove('gone'); launcherr.textContent='';
  backtowork.style.display = font ? '' : 'none';
- lfontname.textContent = font ? (fontname.textContent+' — en mémoire') : 'aucune typo chargée';
+ lfontname.textContent = font ? (fontname.textContent+' — en mémoire') : 'no typeface loaded';
  setTimeout(drawLaunchGrid,20);
 });
 // Échap depuis l'accueil = revenir au travail
@@ -9612,14 +9642,14 @@ updatePanelVis();
 /* ---------- BARRE D'ÉTAT ---------- */
 const MODE_LABEL={contour:'Trait',extr_black:'Volume plein',transparent:'Transparent',
  face_black:'Face pleine',wire3d:'Filaire'};
-const PROJ_LABEL={iso:'Isométrique','3d':'3D'};
+const PROJ_LABEL={iso:'Isometric','3d':'3D'};
 function updateStatusBar(){
  try{
-   sbfont.textContent = font ? (fontname.textContent||'typo') : 'aucune typo';
-   sbmode.textContent = compo ? 'Plan de travail' : 'Spécimen';
+   sbfont.textContent = font ? (fontname.textContent||'typo') : 'no typeface';
+   sbmode.textContent = compo ? 'Workspace' : 'Specimen';
    sbinfo.textContent = compo
-     ? (compoLetters.length+' lettre'+(compoLetters.length>1?'s':'')
-        + (compoSelSet.size?(' · '+compoSelSet.size+' sélect.'):'')
+     ? (compoLetters.length+' letter'+(compoLetters.length>1?'s':'')
+        + (compoSelSet.size?(' · '+compoSelSet.size+' selected'):'')
         + ' · zoom '+Math.round(view.z*100)+'%')
      : ((MODE_LABEL[mode]||mode)+' · '+(PROJ_LABEL[proj]||proj));
    sbmsg.textContent = elStatus.textContent||'';
@@ -9656,19 +9686,50 @@ window.addEventListener('resize',()=>{ clearTimeout(thumbT); thumbT=setTimeout(r
  if(!inFrame) document.getElementById('fxclose').style.display='none';
  if(inline){ root.classList.add('fx-inline');
    if(window.FX_STAGE_H) root.style.setProperty('--fx-stage-h', window.FX_STAGE_H);
-   try{ compohint.textContent='clic = poser · glisser = déplacer · Maj+clic / Maj+glisser = sélection · ⌘C ⌘V ⌘Z ⌘A · clic dans le plan puis molette (ou ⌘/Ctrl + molette) = zoom'; }catch(_){}
+   try{ compohint.textContent='click = place · drag = move · Shift+click / Shift+drag = select · ⌘C ⌘V ⌘Z ⌘A · click the canvas, then wheel (or ⌘/Ctrl + wheel) = zoom'; }catch(_){}
  }
 
  // export SVG : confié à la page du portfolio (téléchargement confirmé par le visiteur)
  if(inFrame){
-   saveText = function(str, fname){ post({type:'fx-download', filename:fname, data:str}); setStatus('Export SVG : '+fname+'…'); };
+   saveText = function(str, fname){ post({type:'fx-download', filename:fname, data:str}); setStatus('SVG export: '+fname+'…'); };
  }
  window.addEventListener('message', function(e){
    var d=e.data||{};
-   if(d.type==='fx-download-result') setStatus(d.ok ? '✓ SVG enregistré : '+(d.filename||'') : (d.msg||'Export annulé.'));
-   if(d.type==='fx-sleep'){ engaged=false; root.classList.remove('fx-awake'); }
+   if(d.type==='fx-download-result') setStatus(d.ok ? '✓ SVG saved: '+(d.filename||'') : (d.msg||'Export cancelled.'));
+   if(d.type==='fx-sleep'){ if(root.classList.contains('fx-full')) return; engaged=false; root.classList.remove('fx-awake'); }
+   if(d.type==='fx-full'){ root.classList.toggle('fx-full', !!d.on); root.classList.toggle('fx-awake', !!d.on); engaged=!!d.on; fxTabs(!!d.on);
+     setTimeout(function(){ try{ window.dispatchEvent(new Event('resize')); }catch(_){} }, 60); }
  });
 
+ // réglages en onglets (téléphone, plein écran) : chaque section à part, le plan reste visible au-dessus
+ var tabsBuilt=false, tabCur=0;
+ function fxTabs(on){
+   var aside=document.querySelector('aside'); if(!aside) return;
+   var mob=window.matchMedia && matchMedia('(max-width:860px)').matches;
+   if(!(on && mob)){ if(tabsBuilt){ Array.prototype.forEach.call(aside.querySelectorAll('.sect'),function(s){ s.classList.remove('tab-off'); }); } return; }
+   if(!tabsBuilt){
+     var bar=document.createElement('div'); bar.className='fx-tabs'; bar.setAttribute('role','tablist');
+     var body=document.createElement('div'); body.className='fx-tabbody';
+     while(aside.firstChild) body.appendChild(aside.firstChild);
+     aside.appendChild(bar); aside.appendChild(body); tabsBuilt=true;
+     var orb=document.getElementById('grouprotgroup');
+     if(orb && window.MutationObserver) new MutationObserver(function(){ drawTabs(); }).observe(orb,{attributes:true,attributeFilter:['style']});
+   }
+   drawTabs();
+ }
+ function drawTabs(){
+   var aside=document.querySelector('aside'), bar=aside && aside.querySelector('.fx-tabs'); if(!bar) return;
+   var secs=Array.prototype.filter.call(aside.querySelectorAll('.sect'),function(s){ return s.style.display!=='none'; });
+   if(tabCur>=secs.length) tabCur=0;
+   bar.innerHTML='';
+   secs.forEach(function(s,k){
+     var h=s.querySelector('.secthead'), b=document.createElement('button'); b.type='button';
+     b.textContent=h?h.textContent.replace(/ the selection$/,''):('Tab '+(k+1)); if(k===tabCur) b.className='on';
+     b.addEventListener('click',function(){ tabCur=k; drawTabs(); });
+     bar.appendChild(b);
+   });
+   Array.prototype.forEach.call(aside.querySelectorAll('.sect'),function(s){ s.classList.toggle('tab-off', secs.indexOf(s)!==tabCur); });
+ }
  // dans la page : la molette fait défiler la page tant qu'on n'a pas cliqué dans le plan
  var engaged=false;
  if(inline){
@@ -9680,7 +9741,8 @@ window.addEventListener('resize',()=>{ clearTimeout(thumbT); thumbT=setTimeout(r
    document.addEventListener('mouseleave', function(){ engaged=false; });
    var coarse = window.matchMedia && matchMedia('(hover:none) and (pointer:coarse)').matches;
    if(coarse || ('ontouchstart' in window && navigator.maxTouchPoints>0)) root.classList.add('fx-touch');
-   document.getElementById('fxveil').addEventListener('click', function(){ root.classList.add('fx-awake'); engaged=true; });
+   /* téléphone : toucher le plan l'ouvre en plein écran (dans la page, il gênerait le défilement) */
+   document.getElementById('fxveil').addEventListener('click', function(){ if(inFrame) post({type:'fx-want-full'}); else { root.classList.add('fx-awake'); engaged=true; } });
  }
 
  // tactile : le canvas n'écoute que la souris -> on traduit le doigt en souris
@@ -9708,12 +9770,12 @@ window.addEventListener('resize',()=>{ clearTimeout(thumbT); thumbT=setTimeout(r
  var url = window.FX_FONT_URL, name = window.FX_FONT_NAME || 'PATH FINDER', first = window.FX_WORD || 'PATH', memo = window.FX_RESTORE;
  var wait = document.getElementById('fxwait');
  var b64=window.FX_FONT_B64;
- if(!url && !b64){ wait.textContent='Typo introuvable'; return; }
+ if(!url && !b64){ wait.textContent='Typeface not found'; return; }
  // police embarquée (base64) d'abord : aucun chargement réseau, rien à bloquer
  var getFont = b64 ? new Promise(function(res){ var bin=atob(b64), u=new Uint8Array(bin.length); for(var i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i); res(u.buffer); })
    : fetch(url).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.arrayBuffer(); });
  getFont.then(function(buf){
-   if(!setFont(buf, name)){ wait.textContent='Typo illisible'; return; }
+   if(!setFont(buf, name)){ wait.textContent='Unreadable typeface'; return; }
    wait.classList.add('gone');
    var b=document.querySelector('#modeseg button[data-mo="compo"]'); if(b) b.click();
    dropchar.value = first;
@@ -9746,7 +9808,7 @@ window.addEventListener('resize',()=>{ clearTimeout(thumbT); thumbT=setTimeout(r
      }catch(e){ console.warn(e); }
      post({type:'fx-ready'});
    });
- }).catch(function(e){ wait.textContent='Typo indisponible ('+e.message+')'; });
+ }).catch(function(e){ wait.textContent='Typeface unavailable ('+e.message+')'; });
 })();
 </script>
 </body>
