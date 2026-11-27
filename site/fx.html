@@ -7685,12 +7685,25 @@
     padding:3px 6px; border-radius:0; -moz-appearance:textfield; font-variant-numeric:tabular-nums;}
   .num:focus{outline:none; box-shadow:inset 0 0 0 1px var(--ink)}
   input[type=range]{-webkit-appearance:none; appearance:none; width:100%; height:20px; background:transparent; cursor:pointer; margin:2px 0}
+  /* pas de carré gris autour de l'étoile (surbrillance du toucher iOS, ombre / fond par défaut du curseur) */
+  html{-webkit-tap-highlight-color:transparent}
+  input[type=range]{-webkit-tap-highlight-color:transparent; outline:none; border:0; box-shadow:none}
+  input[type=range]:focus{outline:none}
+  input[type=range]::-webkit-slider-thumb{border:0 !important; border-radius:0; box-shadow:none !important; background-color:transparent !important}
+  input[type=range]::-moz-range-thumb{box-shadow:none; background-color:transparent; border-radius:0}
+  input[type=range]::-moz-focus-outer{border:0}
   input[type=range]::-webkit-slider-runnable-track{height:2px; background:var(--ink)}
   input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; appearance:none; width:20px; height:20px; margin-top:-9px;
     background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2 L14.9 8.6 L22 9.2 L16.5 14 L18.3 21 L12 17.3 L5.7 21 L7.5 14 L2 9.2 L9.1 8.6 Z' fill='%23fff' stroke='%23000' stroke-width='1.6' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat}
   input[type=range]::-moz-range-track{height:2px; background:var(--ink)}
   input[type=range]::-moz-range-thumb{width:20px; height:20px; border:0; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2 L14.9 8.6 L22 9.2 L16.5 14 L18.3 21 L12 17.3 L5.7 21 L7.5 14 L2 9.2 L9.1 8.6 Z' fill='%23fff' stroke='%23000' stroke-width='1.6' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat}
 
+  /* au doigt : zone de prise de 44 px autour de l'étoile (étoile un peu plus grande aussi) */
+  @media (pointer:coarse){
+    input[type=range]{height:44px; margin:0}
+    input[type=range]::-webkit-slider-thumb{width:44px; height:44px; margin-top:-21px; background-size:28px 28px}
+    input[type=range]::-moz-range-thumb{width:44px; height:44px; background-size:28px 28px}
+  }
   .seg{display:grid; grid-template-columns:1fr 1fr; gap:0; border:1px solid var(--ink); border-bottom:0; border-right:0}
   .seg button{border:0; border-right:1px solid var(--ink); border-bottom:1px solid var(--ink); background:#fff; color:var(--ink); padding:8px;
     cursor:pointer; font:inherit; font-size:11px; text-align:left; text-transform:uppercase; letter-spacing:.04em}
@@ -7893,6 +7906,9 @@
   /* plein écran (demandé par la page) : l'outil prend tout l'écran, le panneau défile seul */
   .fx-inline.fx-full, .fx-inline.fx-full body{height:100%; overflow:hidden}
   .fx-full .fx-veil{display:none !important}
+  /* téléphone : dans la page, tout le logiciel est figé ; un toucher l'ouvre en plein écran */
+  .fx-inline.fx-touch:not(.fx-awake) .fx-veil{position:fixed; inset:0; z-index:60; align-items:center; padding-bottom:0; background:rgba(255,255,255,.001)}
+  .fx-inline.fx-touch:not(.fx-awake) .fx-veil span{font-size:11px; padding:12px 18px; white-space:nowrap}
   .fx-full #preview{touch-action:none !important}
   @media (max-width:860px){
     body{overflow:auto}
@@ -7906,6 +7922,14 @@
     #compohint{display:none}
   }
   .fx-inline.fx-full .app{height:100vh; height:100dvh; min-height:0}
+  /* téléphone, dans la page : petite fenêtre avec seulement le plan de travail (aperçu) */
+  @media (max-width:860px){
+    .fx-inline.fx-touch:not(.fx-awake), .fx-inline.fx-touch:not(.fx-awake) body{height:100%; overflow:hidden}
+    .fx-inline.fx-touch:not(.fx-awake) .app{display:block; height:100vh; height:100dvh; min-height:0}
+    .fx-inline.fx-touch:not(.fx-awake) header, .fx-inline.fx-touch:not(.fx-awake) .stagebar,
+    .fx-inline.fx-touch:not(.fx-awake) aside, .fx-inline.fx-touch:not(.fx-awake) .statusbar{display:none !important}
+    .fx-inline.fx-touch:not(.fx-awake) .stage{height:100%}
+  }
   /* téléphone en plein écran : le plan en haut, les réglages en bas, visibles en même temps.
      La barre d'outils tient sur une ligne qui défile ; les réglages passent en onglets courts. */
   @media (max-width:860px){
@@ -8056,7 +8080,7 @@
   <section class="stage">
     <canvas id="preview"></canvas>
     <div class="fx-wait" id="fxwait">Loading the typeface…</div>
-    <div class="fx-veil" id="fxveil"><span>Tap to compose</span></div>
+    <div class="fx-veil" id="fxveil"><span>Tap to open</span></div>
     <div class="statusbar" id="statusbar">
       <span id="sbfont">—</span><span class="sbsep"></span>
       <span id="sbmode">Preview</span><span class="sbsep"></span>
@@ -8687,6 +8711,7 @@ function panelSettings(){
 let compoSelSet=new Set();     // indices sélectionnés (groupe/amas)
 let compoMarquee=null;         // rectangle de sélection Maj+glisser
 let clipLetters=[];            // presse-papier copier/coller (positions relatives)
+var TOUCHY=!!(window.matchMedia&&matchMedia('(pointer:coarse)').matches)||(('ontouchstart' in window)&&navigator.maxTouchPoints>0);
 let pipette={state:'off', style:null};   // pipette de style : 'off' | 'pick' | 'paint'
 let lastWorld=[0,0];           // dernière position souris (monde) -> lieu de collage
 function setStatus(t){ elStatus.className='status'; elStatus.textContent=t; setStatusBarSoon(); }
@@ -8773,8 +8798,8 @@ function drawLetter(ctx,L,inSet,isPrimary){
  const xs=[scx+(bx0-cx)*s, scx+(bx1-cx)*s], ys=[scy-(by0-cy)*s, scy-(by1-cy)*s];
  const X0=Math.min(...xs), X1=Math.max(...xs), Y0=Math.min(...ys), Y1=Math.max(...ys);
  L._screen={x0:X0,y0:Y0,x1:X1,y1:Y1};
- if(inSet){ ctx.save(); ctx.strokeStyle='#3b82f6'; ctx.lineWidth=isPrimary?1.5:1;
-   ctx.setLineDash(isPrimary?[5,4]:[2,3]); ctx.strokeRect(X0-8,Y0-8,(X1-X0)+16,(Y1-Y0)+16); ctx.restore(); }
+ if(inSet){ ctx.save(); ctx.strokeStyle='#3b82f6'; ctx.lineWidth=(isPrimary?1.5:1)*(TOUCHY?1.4:1);
+   const SP=TOUCHY?12:8; ctx.setLineDash(isPrimary?[5,4]:[2,3]); ctx.strokeRect(X0-SP,Y0-SP,(X1-X0)+2*SP,(Y1-Y0)+2*SP); ctx.restore(); }
 }
 /* ---------- ALIGNEMENT D'UNE SÉLECTION ----------
    Les repères sont pris sur la FACE de la lettre (le dessin de la typo), jamais sur le
@@ -8865,7 +8890,7 @@ aligngrp.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b
 let gizAxis='y', gizDrag=null;
 const GIZ_KEY={x:'rx',y:'ry',z:'rz'};
 function gizmoGeom(){
- const r=preview.getBoundingClientRect(), gx=r.width-58, gy=58, R=28;
+ const r=preview.getBoundingClientRect(), GZ=TOUCHY?70:58, gx=r.width-GZ, gy=GZ, R=TOUCHY?36:28;
  const L=(compoSel>=0&&compoLetters[compoSel])?compoLetters[compoSel]:null;
  const M=eulerToMat((L?+L.rx:+rx.value)*D2R,(L?+L.ry:+ry.value)*D2R,(L?+L.rz:+rz.value)*D2R);
  const pts={};
@@ -8885,7 +8910,7 @@ function drawGizmo(ctx){
    const p=g.pts[k], on=(gizAxis===k);
    ctx.beginPath(); ctx.moveTo(g.gx,g.gy); ctx.lineTo(p.x,p.y);
    ctx.strokeStyle=on?'#000':'#a8a8a8'; ctx.lineWidth=on?1.6:1; ctx.stroke();
-   ctx.beginPath(); ctx.arc(p.x,p.y,8.5,0,Math.PI*2);
+   ctx.beginPath(); ctx.arc(p.x,p.y,TOUCHY?12:8.5,0,Math.PI*2);
    ctx.fillStyle=on?'#000':'#fff'; ctx.fill();
    ctx.strokeStyle='#000'; ctx.lineWidth=1; ctx.stroke();
    ctx.fillStyle=on?'#fff':'#000'; ctx.font='bold 9px ui-monospace,SFMono-Regular,Menlo,monospace';
@@ -8898,7 +8923,7 @@ function gizmoHit(sx,sy){
  const g=gizmoGeom();
  let best=null, bz=-1e9;
  for(const k of ['x','y','z']){ const p=g.pts[k];
-   if(Math.hypot(sx-p.x,sy-p.y)<11 && p.z>bz){ best=k; bz=p.z; } }   // le plus en avant gagne
+   if(Math.hypot(sx-p.x,sy-p.y)<(TOUCHY?20:11) && p.z>bz){ best=k; bz=p.z; } }   // le plus en avant gagne
  return best;
 }
 function renderCompo(){
@@ -8948,7 +8973,15 @@ function hitLetter(x,y){   // la plus DEVANT sous le curseur (même critère que
  const order=[...compoLetters.keys()].sort((a,b)=>(dp(b)-dp(a))||(compoLetters[b].y-compoLetters[a].y));
  for(const i of order){ const s=compoLetters[i]._screen;
    if(s && x>=s.x0 && x<=s.x1 && y>=s.y0 && y<=s.y1) return i; }
- return -1;
+ /* rien sous le doigt : zone de prise élargie autour de chaque lettre (au moins ~44 px au doigt),
+    la plus proche gagne — les petites lettres restent faciles à attraper */
+ let best=-1, bd=1e9;
+ for(const i of order){ const s=compoLetters[i]._screen; if(!s) continue;
+   const w=s.x1-s.x0, h=s.y1-s.y0;
+   const px=TOUCHY?Math.max(16,(48-w)/2):Math.max(6,(24-w)/2), py=TOUCHY?Math.max(16,(48-h)/2):Math.max(6,(24-h)/2);
+   if(x>=s.x0-px && x<=s.x1+px && y>=s.y0-py && y<=s.y1+py){
+     const d=Math.hypot(Math.max(s.x0-x,0,x-s.x1), Math.max(s.y0-y,0,y-s.y1)); if(d<bd){ bd=d; best=i; } } }
+ return best;
 }
 preview.addEventListener('mousedown',e=>{
  if(!compo||!font) return;
@@ -9698,9 +9731,21 @@ window.addEventListener('resize',()=>{ clearTimeout(thumbT); thumbT=setTimeout(r
    if(d.type==='fx-download-result') setStatus(d.ok ? '✓ SVG saved: '+(d.filename||'') : (d.msg||'Export cancelled.'));
    if(d.type==='fx-sleep'){ if(root.classList.contains('fx-full')) return; engaged=false; root.classList.remove('fx-awake'); }
    if(d.type==='fx-full'){ root.classList.toggle('fx-full', !!d.on); root.classList.toggle('fx-awake', !!d.on); engaged=!!d.on; fxTabs(!!d.on);
-     setTimeout(function(){ try{ window.dispatchEvent(new Event('resize')); }catch(_){} }, 60); }
+     setTimeout(function(){ try{ window.dispatchEvent(new Event('resize')); }catch(_){} setTimeout(fitCompo, 40); }, 60); }
  });
 
+ // recadre la composition dans le plan (aperçu ↔ plein écran n'ont pas la même taille)
+ function fitCompo(){ try{
+   if(!compo||!compoLetters.length) return;
+   var r=preview.getBoundingClientRect(); if(!r.width||!r.height) return;
+   var x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+   compoLetters.forEach(function(L){ var ink=L._ink||letterInk(L); if(!ink) return; L._ink=ink; var s=(L.pt||150)/(upem||1000),
+     hw=(ink.bbox[2]-ink.bbox[0])*s/2, hh=(ink.bbox[3]-ink.bbox[1])*s/2;
+     x0=Math.min(x0,L.x-hw); x1=Math.max(x1,L.x+hw); y0=Math.min(y0,L.y-hh); y1=Math.max(y1,L.y+hh); });
+   if(!(x1>x0)) return;
+   var z=Math.max(0.1, Math.min(4, Math.min(r.width/(x1-x0), r.height/(y1-y0))*0.82));
+   view={z:z, px:r.width/2-(x0+x1)/2*z, py:r.height/2-(y0+y1)/2*z}; renderCompo(); updateStatusBar();
+ }catch(e){} }
  // réglages en onglets (téléphone, plein écran) : chaque section à part, le plan reste visible au-dessus
  var tabsBuilt=false, tabCur=0;
  function fxTabs(on){
@@ -9742,6 +9787,9 @@ window.addEventListener('resize',()=>{ clearTimeout(thumbT); thumbT=setTimeout(r
    var coarse = window.matchMedia && matchMedia('(hover:none) and (pointer:coarse)').matches;
    if(coarse || ('ontouchstart' in window && navigator.maxTouchPoints>0)) root.classList.add('fx-touch');
    /* téléphone : toucher le plan l'ouvre en plein écran (dans la page, il gênerait le défilement) */
+   var veilLab=document.querySelector('#fxveil span');
+   function placeVeil(){ if(!veilLab) return; var r=preview.getBoundingClientRect(); veilLab.style.position='absolute'; veilLab.style.left='50%'; veilLab.style.transform='translate(-50%,-50%)'; veilLab.style.top=Math.round(r.top+r.height-32)+'px'; }
+   placeVeil(); window.addEventListener('resize', placeVeil); setTimeout(placeVeil, 400);
    document.getElementById('fxveil').addEventListener('click', function(){ if(inFrame) post({type:'fx-want-full'}); else { root.classList.add('fx-awake'); engaged=true; } });
  }
 
